@@ -1,7 +1,5 @@
 # JesseHicklen-Portfolio
 
-# Jesse Hicklen - Programming Portfolio
-
 Welcome to my GitHub portfolio!  
 I am a Computer Science student currently building my Cybersecurity and software engineering skills.  
 This repository includes projects from my coursework and personal experiments.
