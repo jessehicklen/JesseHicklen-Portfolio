@@ -1,0 +1,207 @@
+/*
+*
+* Jesse Hicklen
+* Assignment 5 
+* 2/25/25
+* tree  Avl class
+**/
+
+#ifndef TREE_HPP
+#define TREE_HPP
+
+#include <memory>
+#include <iostream>
+#include <queue>
+#include <functional>
+using namespace std;
+
+template<typename V>
+class Tree 
+{
+public:
+    struct Node 
+    {
+        V value;
+        shared_ptr<Node> left;
+        shared_ptr<Node> right;
+        weak_ptr<Node> parent; 
+
+        Node(V v) : value(v), left(nullptr), right(nullptr), parent() {}
+    };
+
+private:
+    shared_ptr<Node> root;
+
+public:
+    
+    Tree() : root(nullptr) {}
+    explicit Tree(shared_ptr<Node> node) : root(node) {}
+    Tree(const Tree &lft, V value, const Tree &rgt) :
+        root(make_shared<Node>(value)) 
+        {
+        root->left = lft.root;
+        root->right = rgt.root;
+        if (root->left) root->left->parent = root;
+        if (root->right) root->right->parent = root;
+    }
+
+    
+    shared_ptr<Node> getRoot() const { return root; }
+
+    
+    bool isEmpty() const { return !root; }
+
+    
+    V getRootValue() const { return root ? root->value : V(); }
+
+    
+    Tree left() const { return root && root->left ? Tree(root->left) : Tree(); }
+    Tree right() const { return root && root->right ? Tree(root->right) : Tree(); }
+
+    
+    bool member(V x) const 
+    {
+        return memberHelper(root, x);
+    }
+
+  
+    bool isLeaf() const 
+    {
+        return root && !root->left && !root->right;
+    }
+
+    
+    void insert(V value) 
+    {
+        if (!root) 
+        {
+            root = make_shared<Node>(value);
+        } 
+        else 
+        {
+            insertHelper(root, value);
+        }
+    }
+
+   
+    bool remove(V value) 
+    {
+        return deleteNode(root, value);
+    }
+
+    
+    void inOrderTraversal(function<void(V)> func) const 
+    {
+        inOrderHelper(root, func);
+    }
+
+    
+    void levelOrderTraversal(function<void(V)> func) const 
+    {
+        if (!root) return;
+        queue<shared_ptr<Node>> q;
+        q.push(root);
+        while (!q.empty()) 
+        {
+            auto node = q.front();
+            q.pop();
+            func(node->value);
+            if (node->left) q.push(node->left);
+            if (node->right) q.push(node->right);
+        }
+    }
+
+private:
+    
+    bool memberHelper(shared_ptr<Node> node, V x) const 
+    {
+        if (!node) return false;
+        if (node->value == x) return true;
+        return memberHelper(node->left, x) || memberHelper(node->right, x);
+    }
+
+    void insertHelper(shared_ptr<Node> node, V value) 
+    {
+        if (value < node->value) 
+        {
+            if (!node->left) 
+            {
+                node->left = make_shared<Node>(value);
+                node->left->parent = node;
+            } 
+            else 
+            {
+                insertHelper(node->left, value);
+            }
+        } 
+        else 
+        {
+            if (!node->right) 
+            {
+                node->right = make_shared<Node>(value);
+                node->right->parent = node;
+            } 
+            else 
+            {
+                insertHelper(node->right, value);
+            }
+        }
+    }
+
+    bool deleteNode(shared_ptr<Node> &node, V value) 
+    {
+        if (!node) return false;
+        if (value < node->value) 
+        {
+            return deleteNode(node->left, value);
+        } 
+        else if (value > node->value) 
+        {
+            return deleteNode(node->right, value);
+        } 
+        else 
+        {
+            if (!node->left && !node->right) 
+            {
+                node.reset();
+            } 
+            else if (!node->left) 
+            {
+                node = node->right;
+            } 
+            else if (!node->right) 
+            {
+                node = node->left;
+            } 
+            else 
+            {
+                auto minNode = findMin(node->right);
+                node->value = minNode->value;
+                deleteNode(node->right, minNode->value);
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+    shared_ptr<Node> findMin(shared_ptr<Node> node) const 
+    {
+        while (node->left) 
+        {
+            node = node->left;
+        }
+        return node;
+    }
+
+   
+    void inOrderHelper(shared_ptr<Node> node, function<void(V)> func) const 
+    {
+        if (!node) return;
+        inOrderHelper(node->left, func);
+        func(node->value);
+        inOrderHelper(node->right, func);
+    }
+};
+
+#endif 
